@@ -1,0 +1,15 @@
+services:
+  proxyserver:
+    build: .
+    ports:
+      - 8080:8080
+    networks:
+      - networkName: thalamus-proxy
+
+  redis:
+    image: redis:8.0-M04-bookworm
+    networks:
+      - networkName: thalamus-proxy
+
+networks:
+  thalamus-proxy:
