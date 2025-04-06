@@ -12,6 +12,11 @@ services:
       - "8080:8080"
     networks:
       - thalamus-proxy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+      - registrationserver
   registrationserver:
     build:
       context: ..
@@ -20,6 +25,8 @@ services:
       - "8081:8081"
     networks:
       - thalamus-proxy
+    depends_on:
+      - redis
 
 networks:
   thalamus-proxy:

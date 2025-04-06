@@ -20,16 +20,16 @@ type AnalyticsQueue struct {
 	client *redis.Client
 }
 
-func init() {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:9000",
-		Password: "", // No password set
-		DB:       0,  // Use default DB
-		Protocol: 2,  // Connection protocol
-	})
-	client.FlushAll(context.Background())
-	client.Close()
-}
+// func init() {
+// 	client := redis.NewClient(&redis.Options{
+// 		Addr:     "localhost:9000",
+// 		Password: "", // No password set
+// 		DB:       0,  // Use default DB
+// 		Protocol: 2,  // Connection protocol
+// 	})
+// 	client.FlushAll(context.Background())
+// 	client.Close()
+// }
 
 func NewAnalyticsQueue() *AnalyticsQueue {
 	client := redis.NewClient(&redis.Options{

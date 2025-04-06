@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/AndrewSerra/thalamus/proxyserver/internal/analytics"
@@ -40,7 +42,20 @@ func getForwardAddress(servName string) (string, error) {
 	if len(addr) == 0 {
 		return "", errors.New("no available workers")
 	}
-	return addr[0], nil
+
+	returnAddr := addr[0]
+	match, err := regexp.Match("(localhost):\\d+", []byte(returnAddr))
+
+	if err != nil {
+		return "", err
+	}
+
+	if match {
+		returnAddr = strings.Replace(returnAddr, "localhost", "host.docker.internal", 1)
+		log.Printf("Found localhost, replacing with host.docker.internal forward address: %s\n", returnAddr)
+	}
+
+	return returnAddr, nil
 }
 
 func getHandler(eventChan chan analytics.RequestInfo) func(http.ResponseWriter, *http.Request) {
@@ -61,12 +76,13 @@ func getHandler(eventChan chan analytics.RequestInfo) func(http.ResponseWriter, 
 			return
 		}
 
-		eventChan <- extractRequestInfo(r, servName, pathStartIdx)
+		// eventChan <- extractRequestInfo(r, servName, pathStartIdx)
 
 		targetURL := target + r.URL.Path[pathStartIdx:]
-		log.Println("Forwarding request to: ", targetURL)
 		proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
+
 		if err != nil {
+			log.Printf("Error creating proxy request: %s", err)
 			http.Error(w, "Error creating proxy request", http.StatusInternalServerError)
 			return
 		}
@@ -77,8 +93,13 @@ func getHandler(eventChan chan analytics.RequestInfo) func(http.ResponseWriter, 
 			}
 		}
 
-		resp, err := http.DefaultClient.Do(proxyReq)
+		client := http.Client{
+			Timeout: 5 * time.Second,
+		}
+
+		resp, err := client.Do(proxyReq)
 		if err != nil {
+			log.Printf("Error sending proxy request: %s", err)
 			http.Error(w, "Error sending proxy request", http.StatusInternalServerError)
 			return
 		}
@@ -98,7 +119,7 @@ func getHandler(eventChan chan analytics.RequestInfo) func(http.ResponseWriter, 
 
 func main() {
 
-	events := make(chan analytics.RequestInfo)
+	events := make(chan analytics.RequestInfo, 16)
 
 	// Analytics event sender
 	// go func() {
