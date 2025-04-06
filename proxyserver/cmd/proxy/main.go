@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -65,7 +64,7 @@ func getHandler(eventChan chan analytics.RequestInfo) func(http.ResponseWriter, 
 		eventChan <- extractRequestInfo(r, servName, pathStartIdx)
 
 		targetURL := target + r.URL.Path[pathStartIdx:]
-
+		log.Println("Forwarding request to: ", targetURL)
 		proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 		if err != nil {
 			http.Error(w, "Error creating proxy request", http.StatusInternalServerError)
@@ -102,20 +101,20 @@ func main() {
 	events := make(chan analytics.RequestInfo)
 
 	// Analytics event sender
-	go func() {
-		aq := analytics.NewAnalyticsQueue()
+	// go func() {
+	// 	aq := analytics.NewAnalyticsQueue()
 
-		for {
-			event := <-events
-			log.Printf("Sending event: %+v", event)
+	// 	for {
+	// 		event := <-events
+	// 		log.Printf("Sending event: %+v", event)
 
-			aq.PushRequestEventQueue(event)
-		}
-	}()
+	// 		aq.PushRequestEventQueue(event)
+	// 	}
+	// }()
 
-	fmt.Println("Proxy server listening on 127.0.0.1:8080")
+	log.Println("Proxy server listening on 127.0.0.1:8080")
 	http.HandleFunc("/", getHandler(events))
-	err := http.ListenAndServe("127.0.0.1:8080", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)
 	}

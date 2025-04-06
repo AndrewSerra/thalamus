@@ -3,11 +3,11 @@ FROM golang:1.24.1-bookworm AS builder
 WORKDIR /app
 
 COPY ../../go.mod .
-COPY cmd/registration/. .
+COPY . .
 
 RUN go mod download
 
-RUN go build -o registrationserver .
+RUN go build -o registrationserver cmd/registration/main.go
 
 FROM debian:bookworm-slim
 

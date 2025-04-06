@@ -69,9 +69,9 @@ func handleUnregistration(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
 	http.HandleFunc("/register", handleRegistration)
 	http.HandleFunc("/unregister", handleUnregistration)
 
+	log.Println("Registration server listening on 127.0.0.1:8081")
 	http.ListenAndServe(":8081", nil)
 }
