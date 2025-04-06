@@ -37,18 +37,34 @@ func NewLookupWorker() *LookupWorker {
 
 func (w *LookupWorker) GetAddresses(serviceName string) []string {
 	ctx := context.Background()
-	val := w.client.LRange(ctx, serviceName, 0, -1).Val()
+	val, err := w.client.LRange(ctx, serviceName, 0, -1).Result()
+
+	if err != nil {
+		log.Printf("Error getting addresses for service %s: %s", serviceName, err)
+		return []string{}
+	}
 	return val
 }
 
 func (w *LookupWorker) SetAddress(serviceName string, address string) int64 {
 	ctx := context.Background()
-	size := w.client.RPush(ctx, serviceName, address)
-	log.Printf("Setting new address for service %s: %s, number of available workers: %d", serviceName, address, size.Val())
-	return size.Val()
+	res, err := w.client.RPush(ctx, serviceName, address).Result()
+
+	if err != nil {
+		log.Printf("Error setting address for service %s: %s", serviceName, err)
+		return -1
+	}
+	log.Printf("Setting new address for service %s: %s, number of available workers: %d", serviceName, address, res)
+	return res
 }
 
 func (w *LookupWorker) DeleteAddress(serviceName string, address string) {
 	ctx := context.Background()
-	w.client.LRem(ctx, serviceName, 1, address).Val()
+	res, err := w.client.LRem(ctx, serviceName, 1, address).Result()
+
+	if err != nil {
+		log.Printf("Error deleting address for service %s: %s", serviceName, err)
+		return
+	}
+	log.Printf("Deleting address for service %s: %s, number of available workers: %d", serviceName, address, res)
 }
