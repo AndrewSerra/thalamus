@@ -1,6 +1,7 @@
 services:
   redis:
     image: redis:8.0-M04-bookworm
+    container_name: redis
     networks:
       - thalamus-proxy
   proxyserver:
