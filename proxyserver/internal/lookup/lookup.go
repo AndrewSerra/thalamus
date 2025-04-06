@@ -13,17 +13,18 @@ type LookupWorker struct {
 
 func init() {
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "redis",
 		Password: "", // No password set
 		DB:       0,  // Use default DB
 		Protocol: 2,  // Connection protocol
 	})
 	client.FlushAll(context.Background())
+	client.Close()
 }
 
 func NewLookupWorker() *LookupWorker {
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "redis",
 		Password: "", // No password set
 		DB:       0,  // Use default DB
 		Protocol: 2,  // Connection protocol

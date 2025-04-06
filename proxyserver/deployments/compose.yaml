@@ -1,15 +1,24 @@
 services:
-  proxyserver:
-    build: .
-    ports:
-      - 8080:8080
-    networks:
-      - networkName: thalamus-proxy
-
   redis:
     image: redis:8.0-M04-bookworm
     networks:
-      - networkName: thalamus-proxy
+      - thalamus-proxy
+  proxyserver:
+    build:
+      context: ..
+      dockerfile: cmd/proxy/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - thalamus-proxy
+  registrationserver:
+    build:
+      context: ..
+      dockerfile: cmd/registration/Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - thalamus-proxy
 
 networks:
   thalamus-proxy:

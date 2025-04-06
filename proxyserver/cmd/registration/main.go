@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/AndrewSerra/thalamus/internal/lookup"
+	"github.com/AndrewSerra/thalamus/proxyserver/internal/lookup"
 )
 
 var lock = sync.Mutex{}
