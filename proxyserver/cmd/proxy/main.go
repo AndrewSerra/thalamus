@@ -76,7 +76,7 @@ func getHandler(eventChan chan analytics.RequestInfo) func(http.ResponseWriter, 
 			return
 		}
 
-		// eventChan <- extractRequestInfo(r, servName, pathStartIdx)
+		eventChan <- extractRequestInfo(r, servName, pathStartIdx)
 
 		targetURL := target + r.URL.Path[pathStartIdx:]
 		proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
@@ -122,16 +122,14 @@ func main() {
 	events := make(chan analytics.RequestInfo, 16)
 
 	// Analytics event sender
-	// go func() {
-	// 	aq := analytics.NewAnalyticsQueue()
+	go func() {
+		aq := analytics.NewAnalyticsQueue()
 
-	// 	for {
-	// 		event := <-events
-	// 		log.Printf("Sending event: %+v", event)
-
-	// 		aq.PushRequestEventQueue(event)
-	// 	}
-	// }()
+		for event := range events {
+			log.Printf("Sending event: %+v", event)
+			aq.PushRequestEventQueue(event)
+		}
+	}()
 
 	log.Println("Proxy server listening on 127.0.0.1:8080")
 	http.HandleFunc("/", getHandler(events))

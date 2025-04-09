@@ -1,0 +1,46 @@
+services:
+  redis-analytics:
+    image: redis:8.0-M04-bookworm
+    container_name: redis-analytics
+    ports:
+      - "9000:6379"
+    networks:
+      - thalamus-analytics
+
+  analytics-db:
+    image: prom/prometheus:main
+    container_name: analytics-db
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - thalamus-analytics
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - thalamus-analytics
+    depends_on:
+      - analytics-db
+
+  worker:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    networks:
+      - thalamus-analytics
+    depends_on:
+      - redis-analytics
+      - analytics-db
+
+networks:
+  thalamus-analytics:
+volumes:
+  grafana_data:

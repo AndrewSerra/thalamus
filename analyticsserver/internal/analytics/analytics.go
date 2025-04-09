@@ -3,7 +3,6 @@ package analytics
 import (
 	"context"
 	"encoding/json"
-	"log"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -22,7 +21,7 @@ type AnalyticsQueue struct {
 
 // func init() {
 // 	client := redis.NewClient(&redis.Options{
-// 		Addr:     "localhost:9000",
+// 		Addr:     "redis:6379",
 // 		Password: "", // No password set
 // 		DB:       0,  // Use default DB
 // 		Protocol: 2,  // Connection protocol
@@ -33,7 +32,7 @@ type AnalyticsQueue struct {
 
 func NewAnalyticsQueue() *AnalyticsQueue {
 	client := redis.NewClient(&redis.Options{
-		Addr:     "host.docker.internal:9000",
+		Addr:     "redis-analytics:6379",
 		Password: "", // No password set
 		DB:       0,  // Use default DB
 		Protocol: 2,  // Connection protocol
@@ -44,19 +43,21 @@ func NewAnalyticsQueue() *AnalyticsQueue {
 	}
 }
 
-func (w *AnalyticsQueue) PushRequestEventQueue(event RequestInfo) {
+func (w *AnalyticsQueue) PopRequestEventQueue() (RequestInfo, error) {
 	ctx := context.Background()
-
-	b, err := json.Marshal(event)
-
-	if err != nil {
-		log.Printf("Error marshalling request event: %s", err)
-		return
-	}
-
-	_, err = w.client.RPush(ctx, "request_event", string(b)).Result()
+	val, err := w.client.LPop(ctx, "request_event").Result()
 
 	if err != nil {
-		log.Printf("Error pushing request event to queue: %s", err)
+		return RequestInfo{}, err
 	}
+
+	var event RequestInfo
+
+	err = json.Unmarshal([]byte(val), &event)
+
+	if err != nil {
+		return RequestInfo{}, err
+	}
+
+	return event, nil
 }
